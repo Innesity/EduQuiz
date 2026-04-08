@@ -11,5 +11,5 @@ The original source can be found at:
 
 ## Acknowledgements
 
-The original project was created by **Robert-Gabriel Gaube**. Subsequent modifications were made by me with assistance from **Cursor** (AI-powered code editor), based on my instructions.
+The original project was created by **Robert-Gabriel Gaube**. Subsequent modifications were made by me with assistance from **Cursor**, based on my instructions.
 
