@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test echipe EDU :3</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="shortcut icon" type="image/x-icon" href="ligaACLogo.png" />
+  <style>
+    .fade {
+      transition: opacity 0.5s ease;
+    }
+    .hidden-opacity {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .custom-hover:hover {
+      background-color: #dad2bc;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen" style="background-color: #f5f1ed;">
+  <img src="logoLigaTopLeft.png" alt="logo liga"
+     class="absolute top-0 left-0 w-40 sm:w-56 md:w-72 object-cover">
+
+  <!-- Top Right Controls -->
+  <div class="absolute top-4 right-4 flex gap-2">
+    <a href="/admin.html" class="text-sm text-white px-3 py-2 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;">
+      Customize
+    </a>
+  </div>
+
+  <!-- Landing Page -->
+  <section id="landing" class="text-center p-8 fade">
+    <img src="teamsEdu-transparent.png" alt="Team Illustration" class="mx-auto my-4 max-w-xs sm:max-w-sm md:max-w-md">
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <h1 class="text-3xl font-bold">Descoperă care este super puterea ta EDU!</h1>
+      <button onclick="startQuiz()" 
+        class="text-lg text-white px-4 py-3 rounded-xl shadow hover:opacity-90"
+        style="background-color:#9E0B0F;">
+        Start!!!
+      </button>
+    </div>
+    <p id="landing-subtitle" class="mt-3 text-lg text-gray-700"></p>
+    <div id="landing-textbox" class="hidden mt-4 mx-auto max-w-xl bg-white border border-gray-200 rounded-2xl p-4 text-left shadow-sm">
+      <div id="landing-textbox-content" class="whitespace-pre-wrap text-gray-800"></div>
+    </div>
+  </section>
+
+  <!-- Quiz Page -->
+  <section id="quiz" class="hidden w-full max-w-xl mx-auto p-6 fade">
+    <div class="w-full bg-gray-300 rounded-full h-4 mb-6">
+      <div id="progress-bar" 
+          class="h-4 rounded-full transition-all duration-300" 
+          style="width: 0%; background-color: #9E0B0F;">
+      </div>
+    </div>
+
+    <div id="question-container" class="fade hidden-opacity"></div>
+
+    <div class="flex justify-between pt-6">
+      <button id="prev-btn" onclick="prevQuestion()" 
+        class="text-white px-4 py-2 rounded-xl hidden"
+        style="background-color:#9E0B0F;">
+        ⬅️ Întrebarea anterioară
+      </button>
+    </div>
+  </section>
+
+  <!-- Results Page -->
+  <section id="results" class="hidden text-center p-8 fade hidden-opacity">
+    <h2 class="text-2xl font-bold mb-4">Echipa potrivită</h2>
+    <img id="result-image" class="mx-auto my-4 max-w-xs rounded-xl" alt="Team Image">
+    <p id="result-text" class="text-left text-lg"></p>
+    <button onclick="restartQuiz()"
+      class="text-white px-4 py-3 rounded-xl mt-6"
+      style="background-color:#9E0B0F;">
+      Restart 🔄
+    </button>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduQuiz Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="shortcut icon" type="image/x-icon" href="ligaACLogo.png" />
+</head>
+<body class="min-h-screen" style="background-color: #f5f1ed;">
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <h1 class="text-2xl font-bold">Customize quiz</h1>
+      <div class="flex gap-2">
+        <a href="/main.html" class="text-sm px-3 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50">
+          Back to quiz
+        </a>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 mb-4">
+      <div class="flex flex-col md:flex-row gap-3 md:items-end">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold mb-1">Quiz title</label>
+          <input id="editor-title" class="w-full border border-gray-300 rounded-xl px-3 py-2" placeholder="Title shown on landing">
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-semibold mb-1">Quiz subtitle</label>
+          <input id="editor-subtitle" class="w-full border border-gray-300 rounded-xl px-3 py-2" placeholder="Optional subtitle">
+        </div>
+        <button onclick="saveFromEditor()" class="text-white px-4 py-2 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;">
+          Save
+        </button>
+      </div>
+      <div class="mt-3">
+        <label class="block text-sm font-semibold mb-1">Landing text box</label>
+        <textarea id="editor-landingText" class="w-full border border-gray-300 rounded-xl px-3 py-2" rows="4" placeholder="Custom text shown on the landing page..."></textarea>
+      </div>
+      <p class="text-sm text-gray-600 mt-3">
+        Changes are saved locally in your browser (localStorage). Use export/import below to share configs.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white border border-gray-200 rounded-2xl p-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold">Outcomes (teams)</h2>
+          <button onclick="addOutcome()" class="text-sm text-white px-3 py-2 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;">
+            + Add outcome
+          </button>
+        </div>
+        <div id="editor-outcomes" class="mt-3 space-y-3"></div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-2xl p-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold">Questions</h2>
+          <button onclick="addQuestion()" class="text-sm text-white px-3 py-2 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;">
+            + Add question
+          </button>
+        </div>
+        <div id="editor-questions" class="mt-3 space-y-3"></div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-2xl p-4 mt-4">
+      <h2 class="text-xl font-bold mb-2">Import / Export</h2>
+      <div class="flex flex-col md:flex-row gap-2 md:items-center mb-2">
+        <button onclick="exportConfig()" class="text-sm text-white px-3 py-2 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;">
+          Export JSON
+        </button>
+        <button onclick="downloadConfig()" class="text-sm text-white px-3 py-2 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;">
+          Download JSON
+        </button>
+        <button onclick="importConfigFromTextarea()" class="text-sm text-white px-3 py-2 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;">
+          Import JSON
+        </button>
+        <button onclick="resetToDefault()" class="text-sm px-3 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50">
+          Reset to default
+        </button>
+      </div>
+      <textarea id="editor-json" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-mono text-sm" rows="10" placeholder="Paste exported JSON here..."></textarea>
+      <p id="editor-status" class="text-sm text-gray-700 mt-2"></p>
+    </div>
+  </div>
+
+  <script src="/admin.js"></script>
+</body>
+</html>
+
