@@ -104,6 +104,19 @@ function uid(prefix) {
 
 let config = loadConfig();
 
+function isStaticHost() {
+  // GitHub Pages is a static host (no server-side /api/config).
+  // Also treat file:// as static for local testing.
+  try {
+    if (window.location.protocol === "file:") return true;
+    const host = String(window.location.hostname || "").toLowerCase();
+    if (host.endsWith(".github.io")) return true;
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 async function fetchServerConfig() {
   const res = await fetch(API_CONFIG_URL, { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error("Failed to fetch server config");
@@ -281,6 +294,13 @@ function saveFromEditor() {
   }
   config = normalized;
   setEditorStatus("Saving...");
+  if (isStaticHost()) {
+    saveConfig(config);
+    renderEditor();
+    setEditorStatus("Saved locally (GitHub Pages).");
+    return;
+  }
+
   saveServerConfig(config)
     .then(() => {
       // keep local cache too (useful if server is temporarily offline)
@@ -345,6 +365,13 @@ function importConfigFromTextarea() {
     }
     config = normalized;
     setEditorStatus("Importing...");
+    if (isStaticHost()) {
+      saveConfig(config);
+      renderEditor();
+      setEditorStatus("Imported and saved locally (GitHub Pages).");
+      return;
+    }
+
     saveServerConfig(config)
       .then(() => {
         saveConfig(config);
@@ -376,6 +403,13 @@ function resetToDefault() {
     ];
   }
   setEditorStatus("Resetting...");
+  if (isStaticHost()) {
+    saveConfig(config);
+    renderEditor();
+    setEditorStatus("Reset to default and saved locally (GitHub Pages).");
+    return;
+  }
+
   saveServerConfig(config)
     .then(() => {
       saveConfig(config);
@@ -512,6 +546,13 @@ function deleteAnswer(questionId, answerId) {
 
 document.addEventListener("DOMContentLoaded", () => {
   setEditorStatus("Loading...");
+  if (isStaticHost()) {
+    config = loadConfig();
+    renderEditor();
+    setEditorStatus("Loaded local config (GitHub Pages).");
+    return;
+  }
+
   fetchServerConfig()
     .then((cfg) => {
       const normalized = normalizeConfig(cfg) || loadConfig();
