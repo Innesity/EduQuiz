@@ -9,6 +9,6 @@ The original project was created by **Robert-Gabriel Gaube**. Subsequent modific
 The original source can be found at:
 `https://github.com/robert-gabriel-gaube/eduQuiz`
 
-default credentials are:
+default credentials for admin/customize page are:
 u: edu
 p: edu
