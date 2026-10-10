@@ -1,85 +1,6 @@
+// Requires quiz-config.js (defaultConfig, normalizeConfig, isNonEmptyString, escapeHtml, escapeAttr, jsArg).
 const STORAGE_KEY = "eduquiz:config:v1";
 const API_CONFIG_URL = "/api/config";
-
-/** @typedef {{ id: string, label: string, imageSrc?: string, description?: string }} Outcome */
-/** @typedef {{ id: string, text: string, outcomeId: string }} Answer */
-/** @typedef {{ id: string, prompt: string, answers: Answer[] }} Question */
-/** @typedef {{ meta: { title: string, subtitle?: string, landingText?: string }, outcomes: Outcome[], questions: Question[] }} QuizConfig */
-
-/** @returns {QuizConfig} */
-function defaultConfig() {
-  return {
-    meta: { title: "Descoperă care este super puterea ta EDU!", subtitle: "", landingText: "" },
-    outcomes: [
-      {
-        id: "reprezentare",
-        label: "Reprezentare",
-        imageSrc: "REPREZENTARE.png",
-        description:
-          "🔴 Ajută la comunicarea cu șefii de an și șefii de subgrupă\n🔴 Facilitează comunicarea dintre studenți și Conducerea Facultății\n🔴 Centralizează problemele sesizate de studenți",
-      },
-      {
-        id: "consiliere",
-        label: "Consiliere",
-        imageSrc: "CONSILIERE.png",
-        description:
-          "🔵 Monitorizează grupurile de an de WhatsApp\n🔵 Răspunde la întrebările studenților venite pe pagina Ligii și pe grupurile de an\n🔵 Identifică nevoile studenților și ia măsuri pentru a le îndeplini",
-      },
-      {
-        id: "informare",
-        label: "Informare",
-        imageSrc: "INFORMARE.png",
-        description:
-          "🟣 Se ocupă cu generarea de conținut edu pentru articole / emailuri de pe Campus Virtual / postări ale Ligii\n🟣 Ajută studenții să descopere oportunități educaționale\n🟣 Realizează sesiuni de informare(întâlniri) cu studenții",
-      },
-    ],
-    questions: [],
-  };
-}
-
-/** @param {any} v */
-function isNonEmptyString(v) {
-  return typeof v === "string" && v.trim().length > 0;
-}
-
-/** @param {any} config @returns {QuizConfig | null} */
-function normalizeConfig(config) {
-  try {
-    if (!config || typeof config !== "object") return null;
-    const meta = config.meta && typeof config.meta === "object" ? config.meta : {};
-    const title = isNonEmptyString(meta.title) ? meta.title : "Quiz";
-    const subtitle = typeof meta.subtitle === "string" ? meta.subtitle : "";
-    const landingText = typeof meta.landingText === "string" ? meta.landingText : "";
-
-    const outcomesRaw = Array.isArray(config.outcomes) ? config.outcomes : [];
-    const outcomes = outcomesRaw
-      .filter((o) => o && typeof o === "object" && isNonEmptyString(o.id) && isNonEmptyString(o.label))
-      .map((o) => ({
-        id: String(o.id),
-        label: String(o.label),
-        imageSrc: typeof o.imageSrc === "string" ? o.imageSrc : "",
-        description: typeof o.description === "string" ? o.description : "",
-      }));
-    if (outcomes.length === 0) return null;
-    const outcomeIds = new Set(outcomes.map((o) => o.id));
-
-    const questionsRaw = Array.isArray(config.questions) ? config.questions : [];
-    const questions = questionsRaw
-      .filter((q) => q && typeof q === "object" && isNonEmptyString(q.id) && isNonEmptyString(q.prompt) && Array.isArray(q.answers))
-      .map((q) => {
-        const answers = q.answers
-          .filter((a) => a && typeof a === "object" && isNonEmptyString(a.id) && isNonEmptyString(a.text) && isNonEmptyString(a.outcomeId))
-          .map((a) => ({ id: String(a.id), text: String(a.text), outcomeId: String(a.outcomeId) }))
-          .filter((a) => outcomeIds.has(a.outcomeId));
-        return { id: String(q.id), prompt: String(q.prompt), answers };
-      })
-      .filter((q) => q.answers.length >= 2);
-
-    return { meta: { title, subtitle, landingText }, outcomes, questions };
-  } catch {
-    return null;
-  }
-}
 
 /** @returns {QuizConfig} */
 function loadConfig() {
@@ -95,7 +16,11 @@ function loadConfig() {
 
 /** @param {QuizConfig} config */
 function saveConfig(config) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config, null, 2));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config, null, 2));
+  } catch {
+    // storage full or blocked; the cache is optional
+  }
 }
 
 function uid(prefix) {
@@ -118,7 +43,7 @@ function isStaticHost() {
 }
 
 async function fetchServerConfig() {
-  const res = await fetch(API_CONFIG_URL, { headers: { Accept: "application/json" } });
+  const res = await fetch(API_CONFIG_URL, { headers: { Accept: "application/json" }, cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch server config");
   return await res.json();
 }
@@ -129,25 +54,21 @@ async function saveServerConfig(nextConfig) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(nextConfig),
   });
-  if (!res.ok) throw new Error("Failed to save server config");
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body && body.error) detail = body.error;
+    } catch {
+      // non-JSON error body
+    }
+    throw new Error(detail);
+  }
 }
 
 function setEditorStatus(msg) {
   const el = document.getElementById("editor-status");
   if (el) el.textContent = msg || "";
-}
-
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function escapeAttr(s) {
-  return escapeHtml(s).replaceAll("\n", " ");
 }
 
 function renderEditor() {
@@ -175,24 +96,24 @@ function renderOutcomesEditor() {
             <div class="flex gap-2">
               <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="moveOutcome(${idx}, -1)">↑</button>
               <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="moveOutcome(${idx}, 1)">↓</button>
-              <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="deleteOutcome('${o.id}')">Delete</button>
+              <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="deleteOutcome(${jsArg(o.id)})">Delete</button>
             </div>
           </div>
           <div class="mt-2 grid grid-cols-1 gap-2">
             <div>
               <label class="block text-xs font-semibold mb-1">Label</label>
               <input class="w-full border border-gray-300 rounded-xl px-3 py-2" value="${escapeAttr(o.label)}"
-                oninput="updateOutcome('${o.id}', 'label', this.value)">
+                oninput="updateOutcome(${jsArg(o.id)}, 'label', this.value)">
             </div>
             <div>
               <label class="block text-xs font-semibold mb-1">Image src</label>
               <input class="w-full border border-gray-300 rounded-xl px-3 py-2" value="${escapeAttr(o.imageSrc || "")}"
-                oninput="updateOutcome('${o.id}', 'imageSrc', this.value)">
+                oninput="updateOutcome(${jsArg(o.id)}, 'imageSrc', this.value)">
             </div>
             <div>
               <label class="block text-xs font-semibold mb-1">Description</label>
               <textarea class="w-full border border-gray-300 rounded-xl px-3 py-2" rows="4"
-                oninput="updateOutcome('${o.id}', 'description', this.value)">${escapeHtml(o.description || "")}</textarea>
+                oninput="updateOutcome(${jsArg(o.id)}, 'description', this.value)">${escapeHtml(o.description || "")}</textarea>
             </div>
           </div>
         </div>
@@ -217,20 +138,20 @@ function renderQuestionsEditor() {
             <div class="flex gap-2">
               <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="moveQuestion(${qIdx}, -1)">↑</button>
               <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="moveQuestion(${qIdx}, 1)">↓</button>
-              <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="deleteQuestion('${q.id}')">Delete</button>
+              <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="deleteQuestion(${jsArg(q.id)})">Delete</button>
             </div>
           </div>
 
           <div class="mt-2">
             <label class="block text-xs font-semibold mb-1">Prompt</label>
             <textarea class="w-full border border-gray-300 rounded-xl px-3 py-2" rows="2"
-              oninput="updateQuestionPrompt('${q.id}', this.value)">${escapeHtml(q.prompt)}</textarea>
+              oninput="updateQuestionPrompt(${jsArg(q.id)}, this.value)">${escapeHtml(q.prompt)}</textarea>
           </div>
 
           <div class="mt-3">
             <div class="flex items-center justify-between gap-2">
               <div class="text-sm font-semibold">Answers</div>
-              <button class="text-sm text-white px-3 py-1 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;" onclick="addAnswer('${q.id}')">
+              <button class="text-sm text-white px-3 py-1 rounded-xl shadow hover:opacity-90" style="background-color:#9E0B0F;" onclick="addAnswer(${jsArg(q.id)})">
                 + Add answer
               </button>
             </div>
@@ -242,21 +163,21 @@ function renderQuestionsEditor() {
                       <div class="flex items-center justify-between gap-2">
                         <div class="text-xs font-semibold">A${aIdx + 1}</div>
                         <div class="flex gap-2">
-                          <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="moveAnswer('${q.id}', ${aIdx}, -1)">↑</button>
-                          <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="moveAnswer('${q.id}', ${aIdx}, 1)">↓</button>
-                          <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="deleteAnswer('${q.id}', '${a.id}')">Delete</button>
+                          <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="moveAnswer(${jsArg(q.id)}, ${aIdx}, -1)">↑</button>
+                          <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="moveAnswer(${jsArg(q.id)}, ${aIdx}, 1)">↓</button>
+                          <button class="text-sm px-3 py-1 rounded-xl border border-gray-300 bg-white hover:bg-gray-50" onclick="deleteAnswer(${jsArg(q.id)}, ${jsArg(a.id)})">Delete</button>
                         </div>
                       </div>
                       <div class="mt-2 grid grid-cols-1 gap-2">
                         <div>
                           <label class="block text-xs font-semibold mb-1">Text</label>
                           <input class="w-full border border-gray-300 rounded-xl px-3 py-2" value="${escapeAttr(a.text)}"
-                            oninput="updateAnswer('${q.id}', '${a.id}', 'text', this.value)">
+                            oninput="updateAnswer(${jsArg(q.id)}, ${jsArg(a.id)}, 'text', this.value)">
                         </div>
                         <div>
                           <label class="block text-xs font-semibold mb-1">Goes to outcome</label>
                           <select class="w-full border border-gray-300 rounded-xl px-3 py-2"
-                            onchange="updateAnswer('${q.id}', '${a.id}', 'outcomeId', this.value)">
+                            onchange="updateAnswer(${jsArg(q.id)}, ${jsArg(a.id)}, 'outcomeId', this.value)">
                             ${outcomeOptions.replace(
                               `value="${escapeAttr(a.outcomeId)}"`,
                               `value="${escapeAttr(a.outcomeId)}" selected`
@@ -293,11 +214,16 @@ function saveFromEditor() {
     return;
   }
   config = normalized;
+  persistConfig("Saved");
+}
+
+/** Saves `config` (server when available, otherwise this browser only) and re-renders. */
+function persistConfig(doneLabel) {
   setEditorStatus("Saving...");
   if (isStaticHost()) {
     saveConfig(config);
     renderEditor();
-    setEditorStatus("Saved locally (GitHub Pages).");
+    setEditorStatus(`${doneLabel} in this browser only (static hosting, no server).`);
     return;
   }
 
@@ -306,10 +232,11 @@ function saveFromEditor() {
       // keep local cache too (useful if server is temporarily offline)
       saveConfig(config);
       renderEditor();
-      setEditorStatus("Saved on server.");
+      setEditorStatus(`${doneLabel} on server.`);
     })
-    .catch(() => {
-      setEditorStatus("Save failed (server).");
+    .catch((err) => {
+      renderEditor();
+      setEditorStatus(`Save failed: ${err.message}. Your edits are still on this page; try Save again.`);
     });
 }
 
@@ -364,61 +291,18 @@ function importConfigFromTextarea() {
       return;
     }
     config = normalized;
-    setEditorStatus("Importing...");
-    if (isStaticHost()) {
-      saveConfig(config);
-      renderEditor();
-      setEditorStatus("Imported and saved locally (GitHub Pages).");
-      return;
-    }
-
-    saveServerConfig(config)
-      .then(() => {
-        saveConfig(config);
-        renderEditor();
-        setEditorStatus("Imported and saved on server.");
-      })
-      .catch(() => {
-        setEditorStatus("Import saved locally, but failed to save on server.");
-      });
+    persistConfig("Imported and saved");
   } catch {
     setEditorStatus("Import failed: JSON parse error.");
   }
 }
 
 function resetToDefault() {
-  config = defaultConfig();
-  if (config.questions.length === 0) {
-    // keep the quiz valid even after reset
-    const fallbackOutcomeId = config.outcomes[0].id;
-    config.questions = [
-      {
-        id: "q1",
-        prompt: "New question",
-        answers: [
-          { id: "q1a1", text: "Answer 1", outcomeId: fallbackOutcomeId },
-          { id: "q1a2", text: "Answer 2", outcomeId: fallbackOutcomeId },
-        ],
-      },
-    ];
-  }
-  setEditorStatus("Resetting...");
-  if (isStaticHost()) {
-    saveConfig(config);
-    renderEditor();
-    setEditorStatus("Reset to default and saved locally (GitHub Pages).");
+  if (!window.confirm("Replace the whole quiz with the default questions and teams? Current content will be lost (download a JSON backup first if unsure).")) {
     return;
   }
-
-  saveServerConfig(config)
-    .then(() => {
-      saveConfig(config);
-      renderEditor();
-      setEditorStatus("Reset to default and saved on server.");
-    })
-    .catch(() => {
-      setEditorStatus("Reset saved locally, but failed to save on server.");
-    });
+  config = defaultConfig();
+  persistConfig("Reset to default and saved");
 }
 
 function addOutcome() {
