@@ -1,12 +1,12 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test echipe EDU :3</title>
+  <meta name="description" content="Descoperă în ce echipă EDU a LigaAC ți se potrivește cel mai bine.">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="shortcut icon" type="image/x-icon" href="ligaACLogo.png" />
+  <link rel="icon" type="image/png" href="logoLigaTopLeft.png" />
   <style>
     .fade {
       transition: opacity 0.5s ease;
@@ -64,9 +64,10 @@
 
   <!-- Results Page -->
   <section id="results" class="hidden text-center p-8 fade hidden-opacity">
-    <h2 class="text-2xl font-bold mb-4">Echipa potrivită</h2>
-    <img id="result-image" class="mx-auto my-4 max-w-xs rounded-xl" alt="Team Image">
-    <p id="result-text" class="text-left text-lg"></p>
+    <h2 class="text-2xl font-bold mb-1">Echipa potrivită</h2>
+    <p id="result-label" class="text-xl font-semibold mb-4" style="color:#9E0B0F;"></p>
+    <img id="result-image" class="mx-auto my-4 max-w-xs rounded-xl" alt="">
+    <p id="result-text" class="text-left text-lg whitespace-pre-line max-w-xl mx-auto"></p>
     <button onclick="restartQuiz()"
       class="text-white px-4 py-3 rounded-xl mt-6"
       style="background-color:#9E0B0F;">
@@ -74,6 +75,7 @@
     </button>
   </section>
 
+  <script src="quiz-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

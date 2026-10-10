@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EduQuiz Admin</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="shortcut icon" type="image/x-icon" href="ligaACLogo.png" />
+  <link rel="icon" type="image/png" href="logoLigaTopLeft.png" />
 </head>
 <body class="min-h-screen" style="background-color: #f5f1ed;">
   <div class="max-w-4xl mx-auto p-6">
@@ -37,7 +37,8 @@
         <textarea id="editor-landingText" class="w-full border border-gray-300 rounded-xl px-3 py-2" rows="4" placeholder="Custom text shown on the landing page..."></textarea>
       </div>
       <p class="text-sm text-gray-600 mt-3">
-        Changes are saved locally in your browser (localStorage). Use export/import below to share configs.
+        Edits apply after you press <strong>Save</strong>. When running with the Node server, Save updates the quiz for everyone.
+        On GitHub Pages there is no server, so Save only affects this browser; use Download JSON to keep a backup.
       </p>
     </div>
 
@@ -84,6 +85,7 @@
     </div>
   </div>
 
+  <script src="./quiz-config.js"></script>
   <script src="./admin.js"></script>
 </body>
 </html>
